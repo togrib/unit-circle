@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Circle Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    
+    <!-- MathLive - using explicit https -->
+    <script src="https://unpkg.com/mathlive"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f8f6f3;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c2416;
+            --text-secondary: #6b5d4f;
+            --accent: #d97706;
+            --accent-light: #fef3c7;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --error: #dc2626;
+            --error-light: #fee2e2;
+            --border: #e7e5e4;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px var(--shadow);
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent), #ea580c, var(--accent));
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .checkbox-item {
+            position: relative;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            display: block;
+            padding: 0.875rem 1rem;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked + .checkbox-label {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .checkbox-label:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #b45309;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .question-display {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .question-text {
+            font-size: 3rem;
+            color: var(--text-primary);
+        }
+
+        .answer-input-container {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        math-field {
+            width: 100%;
+            font-size: 32px;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            display: block;
+        }
+
+        math-field:focus-within {
+            border-color: var(--accent);
+            background: white;
+            outline: none;
+        }
+
+        #keyboard-container {
+            margin-top: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            padding: 0.5rem;
+            min-width: 320px;
+            width: 100%;
+            margin-bottom: 1rem;
+            min-height: 200px;
+        }
+
+        /* Force keyboard to be visible and positioned */
+        #keyboard-container .ML__keyboard {
+            position: relative !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
+            transform: none !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Ensure keyboard backdrop and plate are visible */
+        #keyboard-container .MLK__backdrop,
+        #keyboard-container .MLK__plate {
+            display: block !important;
+            visibility: visible !important;
+            position: relative !important;
+        }
+        
+        /* Ensure keycaps are visible */
+        #keyboard-container .keycap {
+            display: inline-block !important;
+            visibility: visible !important;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .feedback-message {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback-message.show {
+            display: block;
+        }
+
+        .feedback-message.correct {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .feedback-message.incorrect {
+            background: var(--error-light);
+            color: var(--error);
+        }
+
+        .feedback-message.reveal {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 1.5rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Instrument Serif', serif;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s ease;
+        }
+
+        .back-button:hover {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="screen active">
+            <h1>Unit Circle Study Tool</h1>
+            <p class="subtitle">Select your preferences to begin practicing</p>
+
+            <div class="section">
+                <div class="section-title">Trigonometric Functions</div>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="sin" value="sin" checked>
+                        <label for="sin" class="checkbox-label">Sine (sin)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cos" value="cos" checked>
+                        <label for="cos" class="checkbox-label">Cosine (cos)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="tan" value="tan">
+                        <label for="tan" class="checkbox-label">Tangent (tan)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="csc" value="csc">
+                        <label for="csc" class="checkbox-label">Cosecant (csc)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="sec" value="sec">
+                        <label for="sec" class="checkbox-label">Secant (sec)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cot" value="cot">
+                        <label for="cot" class="checkbox-label">Cotangent (cot)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Angle Ranges</div>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="negative" value="negative">
+                        <label for="negative" class="checkbox-label">Angles &lt; 0</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="standard" value="standard" checked>
+                        <label for="standard" class="checkbox-label">0 to 2π</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="positive" value="positive">
+                        <label for="positive" class="checkbox-label">Angles &gt; 2π</label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="startBtn" class="btn btn-primary">Start Practice</button>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="questionScreen" class="screen">
+            <a href="#" class="back-button" id="backBtn">← Back to Setup</a>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalQuestions">0</div>
+                    <div class="stat-label">Questions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="correctAnswers">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+
+            <div class="question-display">
+                <div class="question-text" id="questionText"></div>
+            </div>
+
+            <div id="feedbackMessage" class="feedback-message"></div>
+
+            <div class="answer-input-container">
+                <div class="answer-label">Your Answer:</div>
+                <math-field id="answerField"></math-field>
+                <div id="keyboard-container"></div>
+            </div>
+
+            <div class="button-group">
+                <button id="checkBtn" class="btn btn-secondary">Check</button>
+                <button id="revealBtn" class="btn btn-secondary">Reveal</button>
+                <button id="newQuestionBtn" class="btn btn-primary">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFunctions = [];
+        let selectedRanges = [];
+        let currentQuestion = null;
+        let stats = { total: 0, correct: 0 };
+        let mf = null;
+
+        // Unit circle angles
+        const unitCircleAngles = {
+            'negative': [
+                { latex: '-\\pi', value: -Math.PI },
+                { latex: '-\\frac{2\\pi}{3}', value: -2*Math.PI/3 },
+                { latex: '-\\frac{\\pi}{2}', value: -Math.PI/2 },
+                { latex: '-\\frac{\\pi}{3}', value: -Math.PI/3 },
+                { latex: '-\\frac{\\pi}{4}', value: -Math.PI/4 },
+                { latex: '-\\frac{\\pi}{6}', value: -Math.PI/6 },
+                { latex: '-\\frac{3\\pi}{2}', value: -3*Math.PI/2 },
+                { latex: '-\\frac{3\\pi}{4}', value: -3*Math.PI/4 },
+                { latex: '-\\frac{5\\pi}{6}', value: -5*Math.PI/6 },
+                { latex: '-\\frac{4\\pi}{3}', value: -4*Math.PI/3 },
+                { latex: '-\\frac{5\\pi}{4}', value: -5*Math.PI/4 },
+                { latex: '-\\frac{7\\pi}{6}', value: -7*Math.PI/6 },
+                { latex: '-\\frac{5\\pi}{3}', value: -5*Math.PI/3 },
+                { latex: '-\\frac{7\\pi}{4}', value: -7*Math.PI/4 },
+                { latex: '-\\frac{11\\pi}{6}', value: -11*Math.PI/6 },
+                { latex: '-2\\pi', value: -2*Math.PI }
+            ],
+            'standard': [
+                { latex: '0', value: 0 },
+                { latex: '\\frac{\\pi}{6}', value: Math.PI/6 },
+                { latex: '\\frac{\\pi}{4}', value: Math.PI/4 },
+                { latex: '\\frac{\\pi}{3}', value: Math.PI/3 },
+                { latex: '\\frac{\\pi}{2}', value: Math.PI/2 },
+                { latex: '\\frac{2\\pi}{3}', value: 2*Math.PI/3 },
+                { latex: '\\frac{3\\pi}{4}', value: 3*Math.PI/4 },
+                { latex: '\\frac{5\\pi}{6}', value: 5*Math.PI/6 },
+                { latex: '\\pi', value: Math.PI },
+                { latex: '\\frac{7\\pi}{6}', value: 7*Math.PI/6 },
+                { latex: '\\frac{5\\pi}{4}', value: 5*Math.PI/4 },
+                { latex: '\\frac{4\\pi}{3}', value: 4*Math.PI/3 },
+                { latex: '\\frac{3\\pi}{2}', value: 3*Math.PI/2 },
+                { latex: '\\frac{5\\pi}{3}', value: 5*Math.PI/3 },
+                { latex: '\\frac{7\\pi}{4}', value: 7*Math.PI/4 },
+                { latex: '\\frac{11\\pi}{6}', value: 11*Math.PI/6 },
+                { latex: '2\\pi', value: 2*Math.PI }
+            ],
+            'positive': [
+                { latex: '\\frac{7\\pi}{3}', value: 7*Math.PI/3 },
+                { latex: '\\frac{5\\pi}{2}', value: 5*Math.PI/2 },
+                { latex: '\\frac{8\\pi}{3}', value: 8*Math.PI/3 },
+                { latex: '3\\pi', value: 3*Math.PI },
+                { latex: '\\frac{13\\pi}{6}', value: 13*Math.PI/6 },
+                { latex: '\\frac{9\\pi}{4}', value: 9*Math.PI/4 },
+                { latex: '\\frac{7\\pi}{2}', value: 7*Math.PI/2 },
+                { latex: '\\frac{11\\pi}{4}', value: 11*Math.PI/4 },
+                { latex: '\\frac{10\\pi}{3}', value: 10*Math.PI/3 },
+                { latex: '4\\pi', value: 4*Math.PI }
+            ]
+        };
+
+        const functionLatex = {
+            'sin': '\\sin', 'cos': '\\cos', 'tan': '\\tan',
+            'csc': '\\csc', 'sec': '\\sec', 'cot': '\\cot'
+        };
+
+        function calculateTrigValue(func, angle) {
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            const round = (val) => Math.abs(val) < 1e-10 ? 0 : val;
+            
+            switch(func) {
+                case 'sin': return getExactValue(round(sin));
+                case 'cos': return getExactValue(round(cos));
+                case 'tan':
+                    if (Math.abs(cos) < 1e-10) return { latex: '\\text{undefined}', normalized: 'undefined' };
+                    return getExactValue(round(sin / cos));
+                case 'csc':
+                    if (Math.abs(sin) < 1e-10) return { latex: '\\text{undefined}', normalized: 'undefined' };
+                    return getExactValue(round(1 / sin));
+                case 'sec':
+                    if (Math.abs(cos) < 1e-10) return { latex: '\\text{undefined}', normalized: 'undefined' };
+                    return getExactValue(round(1 / cos));
+                case 'cot':
+                    if (Math.abs(sin) < 1e-10) return { latex: '\\text{undefined}', normalized: 'undefined' };
+                    return getExactValue(round(cos / sin));
+            }
+        }
+
+        function getExactValue(decimal) {
+            const tolerance = 1e-9;
+            const values = [
+                [0, '0', '0'], [1, '1', '1'], [-1, '-1', '-1'],
+                [0.5, '\\frac{1}{2}', '1/2'], [-0.5, '-\\frac{1}{2}', '-1/2'],
+                [Math.sqrt(2)/2, '\\frac{\\sqrt{2}}{2}', 'sqrt(2)/2'],
+                [-Math.sqrt(2)/2, '-\\frac{\\sqrt{2}}{2}', '-sqrt(2)/2'],
+                [Math.sqrt(3)/2, '\\frac{\\sqrt{3}}{2}', 'sqrt(3)/2'],
+                [-Math.sqrt(3)/2, '-\\frac{\\sqrt{3}}{2}', '-sqrt(3)/2'],
+                [Math.sqrt(3)/3, '\\frac{\\sqrt{3}}{3}', 'sqrt(3)/3'],
+                [-Math.sqrt(3)/3, '-\\frac{\\sqrt{3}}{3}', '-sqrt(3)/3'],
+                [Math.sqrt(3), '\\sqrt{3}', 'sqrt(3)'], [-Math.sqrt(3), '-\\sqrt{3}', '-sqrt(3)'],
+                [2*Math.sqrt(3)/3, '\\frac{2\\sqrt{3}}{3}', '2sqrt(3)/3'],
+                [-2*Math.sqrt(3)/3, '-\\frac{2\\sqrt{3}}{3}', '-2sqrt(3)/3'],
+                [2, '2', '2'], [-2, '-2', '-2']
+            ];
+            
+            for (const [val, latex, norm] of values) {
+                if (Math.abs(decimal - val) < tolerance) return { latex, normalized: norm };
+            }
+            
+            return { latex: decimal.toFixed(3), normalized: decimal.toFixed(3) };
+        }
+
+        function generateQuestion() {
+            const func = selectedFunctions[Math.floor(Math.random() * selectedFunctions.length)];
+            let allAngles = [];
+            selectedRanges.forEach(range => {
+                allAngles = allAngles.concat(unitCircleAngles[range]);
+            });
+            const angle = allAngles[Math.floor(Math.random() * allAngles.length)];
+            const answer = calculateTrigValue(func, angle.value);
+            
+            return { function: func, angle, answer };
+        }
+
+        function displayQuestion(question) {
+            const latex = `${functionLatex[question.function]}\\left(${question.angle.latex}\\right)`;
+            const element = document.getElementById('questionText');
+            
+            if (window.katex) {
+                katex.render(latex, element, { throwOnError: false, displayMode: true });
+            } else {
+                element.textContent = latex;
+            }
+        }
+
+        function normalizeLatex(latex) {
+            return latex.toLowerCase()
+                .replace(/\\text\{undefined\}/g, 'undefined')
+                .replace(/\s+/g, '')
+                .replace(/\\left|\\right/g, '')
+                .replace(/\{|\}/g, '')
+                .replace(/\\frac/g, '')
+                .replace(/\\sqrt/g, 'sqrt')
+                .replace(/\\mathrm/g, '')
+                .replace(/\\operatorname/g, '');
+        }
+
+        function areEquivalent(userLatex, correctLatex) {
+            const user = normalizeLatex(userLatex);
+            const correct = normalizeLatex(correctLatex);
+            
+            if (user === correct) return true;
+            
+            const equivalents = [
+                ['sqrt2/2', 'sqrt(2)/2', '1/sqrt2', '1/sqrt(2)', '12sqrt2', '12sqrt(2)'],
+                ['-sqrt2/2', '-sqrt(2)/2', '-1/sqrt2', '-1/sqrt(2)', '-12sqrt2', '-12sqrt(2)'],
+                ['sqrt3/3', 'sqrt(3)/3', '1/sqrt3', '1/sqrt(3)', '13sqrt3', '13sqrt(3)'],
+                ['-sqrt3/3', '-sqrt(3)/3', '-1/sqrt3', '-1/sqrt(3)', '-13sqrt3', '-13sqrt(3)'],
+                ['2sqrt3/3', '2sqrt(3)/3', '2/sqrt3', '2/sqrt(3)', '23sqrt3', '23sqrt(3)'],
+                ['-2sqrt3/3', '-2sqrt(3)/3', '-2/sqrt3', '-2/sqrt(3)', '-23sqrt3', '-23sqrt(3)']
+            ];
+            
+            for (const group of equivalents) {
+                if (group.includes(user) && group.includes(correct)) return true;
+            }
+            
+            return false;
+        }
+
+        function checkAnswer() {
+            if (!mf) return;
+            
+            const userLatex = mf.value;
+            
+            if (!userLatex || userLatex.trim() === '') {
+                showFeedback('Please enter an answer', 'incorrect');
+                return;
+            }
+            
+            stats.total++;
+            if (areEquivalent(userLatex, currentQuestion.answer.latex)) {
+                stats.correct++;
+                showFeedback('Correct! 🎉', 'correct');
+            } else {
+                showFeedback('Not quite, try again', 'incorrect');
+            }
+            updateStats();
+        }
+
+        function revealAnswer() {
+            if (!mf) return;
+            mf.value = currentQuestion.answer.latex;
+            showFeedback(`Answer revealed`, 'reveal');
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedbackMessage');
+            feedback.textContent = message;
+            feedback.className = 'feedback-message show ' + type;
+            setTimeout(() => feedback.classList.remove('show'), 3000);
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = stats.total;
+            document.getElementById('correctAnswers').textContent = stats.correct;
+            const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // Start button
+        document.getElementById('startBtn').addEventListener('click', () => {
+            selectedFunctions = Array.from(document.querySelectorAll('#setupScreen input[type="checkbox"]:checked'))
+                .filter(cb => ['sin', 'cos', 'tan', 'csc', 'sec', 'cot'].includes(cb.id))
+                .map(cb => cb.value);
+            
+            selectedRanges = Array.from(document.querySelectorAll('#setupScreen input[type="checkbox"]:checked'))
+                .filter(cb => ['negative', 'standard', 'positive'].includes(cb.id))
+                .map(cb => cb.value);
+            
+            if (selectedFunctions.length === 0 || selectedRanges.length === 0) {
+                alert('Please select at least one function and one angle range');
+                return;
+            }
+            
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('questionScreen').classList.add('active');
+            
+            // Generate question first
+            currentQuestion = generateQuestion();
+            displayQuestion(currentQuestion);
+            
+            // Get the mathfield element
+            mf = document.getElementById('answerField');
+            
+            // Set policy to "sandboxed" to use custom container
+            mf.mathVirtualKeyboardPolicy = "sandboxed";
+            
+            // Set the container for the inline keyboard
+            const keyboardContainer = document.getElementById('keyboard-container');
+            if (window.mathVirtualKeyboard && keyboardContainer) {
+                window.mathVirtualKeyboard.container = keyboardContainer;
+            }
+            
+            // Disable native keyboard input - only allow virtual keyboard
+            mf.addEventListener('keydown', (evt) => {
+                // Allow only Enter key (to check answer) and prevent all other keyboard input
+                if (evt.key !== 'Enter') {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                }
+            });
+            
+            // Handle Enter key for checking answer
+            mf.addEventListener('keypress', (evt) => {
+                if (evt.key === 'Enter') {
+                    checkAnswer();
+                }
+                evt.preventDefault();
+            });
+            
+            // Show virtual keyboard when mathfield is focused
+            mf.addEventListener('focus', () => {
+                if (window.mathVirtualKeyboard) {
+                    window.mathVirtualKeyboard.show();
+                }
+            });
+            
+            // Use the value property directly
+            mf.value = '';
+            
+            // In sandboxed mode, keyboard shows automatically when focused
+            mf.focus();
+        });
+
+        // Check, reveal, and next buttons
+        document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+        document.getElementById('revealBtn').addEventListener('click', revealAnswer);
+        
+        document.getElementById('newQuestionBtn').addEventListener('click', () => {
+            currentQuestion = generateQuestion();
+            displayQuestion(currentQuestion);
+            if (mf) {
+                mf.value = '';
+                mf.focus();
+            }
+            document.getElementById('feedbackMessage').classList.remove('show');
+        });
+
+        // Back button
+        document.getElementById('backBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('questionScreen').classList.remove('active');
+            document.getElementById('setupScreen').classList.add('active');
+            stats = { total: 0, correct: 0 };
+            updateStats();
+        });
+
+        // Enable/disable start button
+        const checkSelections = () => {
+            const hasSelection = document.querySelectorAll('#setupScreen input[type="checkbox"]:checked').length > 0;
+            document.getElementById('startBtn').disabled = !hasSelection;
+        };
+
+        document.querySelectorAll('#setupScreen input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', checkSelections);
+        });
+        
+        checkSelections();
+    </script>
+</body>
+</html>
